@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <me.yytech.dragpagerview.SquareFrameLayout
+        android:id="@+id/flDragView4"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="15dp"
+        android:layout_marginRight="15dp"
+        android:layout_marginTop="45dp"
+        android:background="@drawable/frame_stack"
+        android:scaleX="0.9"
+        android:scaleY="0.9">
+
+    </me.yytech.dragpagerview.SquareFrameLayout>
+
+    <me.yytech.dragpagerview.SquareFrameLayout
+        android:id="@+id/flDragView3"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="15dp"
+        android:layout_marginRight="15dp"
+        android:layout_marginTop="45dp"
+        android:background="@drawable/frame_stack">
+
+    </me.yytech.dragpagerview.SquareFrameLayout>
+
+    <me.yytech.dragpagerview.SquareFrameLayout
+        android:id="@+id/flDragView2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="15dp"
+        android:layout_marginRight="15dp"
+        android:layout_marginTop="30dp"
+        android:background="@drawable/frame_stack">
+
+    </me.yytech.dragpagerview.SquareFrameLayout>
+
+    <me.yytech.dragpagerview.SquareFrameLayout
+        android:id="@+id/flDragView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="15dp"
+        android:layout_marginRight="15dp"
+        android:layout_marginTop="15dp"
+        android:background="@drawable/frame_stack">
+
+    </me.yytech.dragpagerview.SquareFrameLayout>
+
+    <TextView
+        android:id="@+id/tvTest"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"/>
+
+</merge>
