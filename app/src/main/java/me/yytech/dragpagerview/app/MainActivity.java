@@ -1,17 +1,63 @@
 package me.yytech.dragpagerview.app;
 
+import android.graphics.Color;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.Toast;
+
+import java.util.Random;
+
+import me.yytech.dragpagerview.DragPagerView;
+import me.yytech.dragpagerview.QueeAdapter;
 
 
 public class MainActivity extends ActionBarActivity {
+
+    private QueeAdapter mQueeAdapter;
+
+    public int count = 5;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        final DragPagerView dragPagerView = (DragPagerView) findViewById(R.id.dragPagerView);
+        dragPagerView.setOnEmptyListener(new DragPagerView.OnEmptyListener() {
+            @Override
+            public void onEmpty() {
+                Toast.makeText(MainActivity.this, "empty", Toast.LENGTH_LONG).show();
+            }
+        });
+        dragPagerView.setOnMoreListener(new DragPagerView.OnMoreListener() {
+            @Override
+            public void onMore() {
+                count = 10;
+                dragPagerView.notifyDataChange();
+            }
+        });
+        mQueeAdapter = new QueeAdapter() {
+            public int i = 0;
+
+            @Override
+            public View getNewView() {
+                if (i != getCount()) {
+                    View view = new View(MainActivity.this);
+                    view.setBackgroundColor(Color.rgb(new Random().nextInt(255), 0, 0));
+                    i++;
+                    return view;
+                }
+                return null;
+            }
+
+            @Override
+            public int getCount() {
+                return count;
+            }
+        };
+        dragPagerView.setQueeAdapter(mQueeAdapter);
     }
 
     @Override
