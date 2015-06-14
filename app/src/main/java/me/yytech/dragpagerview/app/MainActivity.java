@@ -19,23 +19,24 @@ public class MainActivity extends ActionBarActivity {
     private QueeAdapter mQueeAdapter;
 
     public int count = 5;
+    private DragPagerView mDragPagerView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        final DragPagerView dragPagerView = (DragPagerView) findViewById(R.id.dragPagerView);
-        dragPagerView.setOnEmptyListener(new DragPagerView.OnEmptyListener() {
+        mDragPagerView = (DragPagerView) findViewById(R.id.dragPagerView);
+        mDragPagerView.setOnEmptyListener(new DragPagerView.OnEmptyListener() {
             @Override
             public void onEmpty() {
                 Toast.makeText(MainActivity.this, "empty", Toast.LENGTH_LONG).show();
             }
         });
-        dragPagerView.setOnMoreListener(new DragPagerView.OnMoreListener() {
+        mDragPagerView.setOnMoreListener(new DragPagerView.OnMoreListener() {
             @Override
             public void onMore() {
                 count = 10;
-                dragPagerView.notifyDataChange();
+                mDragPagerView.notifyDataChange();
             }
         });
         mQueeAdapter = new QueeAdapter() {
@@ -57,7 +58,7 @@ public class MainActivity extends ActionBarActivity {
                 return count;
             }
         };
-        dragPagerView.setQueeAdapter(mQueeAdapter);
+        mDragPagerView.setQueeAdapter(mQueeAdapter);
     }
 
     @Override
@@ -80,5 +81,9 @@ public class MainActivity extends ActionBarActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    public void onTurnLeft(View view) {
+        mDragPagerView.turnPageLeft();
     }
 }

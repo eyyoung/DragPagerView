@@ -16,13 +16,17 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AccelerateInterpolator;
 import android.widget.FrameLayout;
 import android.widget.TextView;
+
+import com.daimajia.androidanimations.library.Techniques;
+import com.daimajia.androidanimations.library.YoYo;
 
 /**
  * Created by Young on 15/6/9.
  */
-public class DragPagerView extends FrameLayout implements View.OnTouchListener, View.OnDragListener {
+public class DragPagerView extends FrameLayout implements View.OnTouchListener {
 
     public static final int DURATION = 300;
     private static final int DISTANCE_LIMIT = 200;
@@ -64,7 +68,6 @@ public class DragPagerView extends FrameLayout implements View.OnTouchListener, 
         mFlDragView3 = (SquareFrameLayout) findViewById(R.id.flDragView3);
         mFlDragView4 = (SquareFrameLayout) findViewById(R.id.flDragView4);
         mFlDragView.setOnTouchListener(this);
-        mFlDragView.setOnDragListener(this);
         mFlDragView3.setScaleX(0.9f);
         mFlDragView3.setScaleY(0.9f);
         mFlDragView2.setScaleX(0.95f);
@@ -75,145 +78,121 @@ public class DragPagerView extends FrameLayout implements View.OnTouchListener, 
     @Override
     public boolean onTouch(View view, MotionEvent motionEvent) {
         if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
-            mStartY = motionEvent.getY();
-            mStartX = motionEvent.getX();
-            ClipData data = ClipData.newPlainText("", "");
-            mShadowBuilder = new MyShadowBuilder(view);
-            mShadowBuilder.offsetX = motionEvent.getX();
-            mShadowBuilder.offsetY = motionEvent.getY();
-            view.startDrag(data, mShadowBuilder, view, 0);
-            view.setAlpha(0f);
+            mStartY = motionEvent.getRawY();
+            mStartX = motionEvent.getRawX();
             return true;
-        } else {
-            return false;
-        }
-    }
-
-    @Override
-    public boolean onDrag(View v, DragEvent event) {
-        int action = event.getAction();
-        switch (action) {
-            case DragEvent.ACTION_DRAG_STARTED:
-                break;
-            case DragEvent.ACTION_DRAG_LOCATION:
-                final float dx = event.getX() - mStartX;
-                final float dy = event.getY() - mStartY;
-                double distance = Math.sqrt(dx * dx + dy * dy);
-                distance = distance > DISTANCE_LIMIT ? DISTANCE_LIMIT : distance;
-                final double percent = distance / (double) DISTANCE_LIMIT;
-                double scale = (percent * 0.05d) + 0.95f;
-                double scale2 = (percent * 0.05d) + 0.9f;
-                scale = scale > 1f ? 1f : scale;
-                mFlDragView2.setScaleY((float) scale);
-                mFlDragView2.setScaleX((float) scale);
-                mFlDragView2.setTranslationY((float) (-dp2px(getContext(), 15) * percent));
-                mFlDragView3.setScaleY((float) scale2);
-                mFlDragView3.setScaleX((float) scale2);
-                mFlDragView3.setTranslationY((float) (-dp2px(getContext(), 15) * percent));
-                isDrop = false;
-                break;
-            case DragEvent.ACTION_DRAG_ENTERED:
-                break;
-            case DragEvent.ACTION_DROP:
-                if (isDrop) {
-                    break;
+        } else if (motionEvent.getAction() == MotionEvent.ACTION_MOVE) {
+            final float dx = motionEvent.getRawX() - mStartX;
+            final float dy = motionEvent.getRawY() - mStartY;
+            Log.e("TEST", dx + " ");
+            Log.e("TEST", dy + " ");
+            mFlDragView.setTranslationX(dx);
+            mFlDragView.setTranslationY(dy);
+            double distance = Math.sqrt(dx * dx + dy * dy);
+            distance = distance > DISTANCE_LIMIT ? DISTANCE_LIMIT : distance;
+            final double percent = distance / (double) DISTANCE_LIMIT;
+            double scale = (percent * 0.05d) + 0.95f;
+            double scale2 = (percent * 0.05d) + 0.9f;
+            scale = scale > 1f ? 1f : scale;
+            mFlDragView2.setScaleY((float) scale);
+            mFlDragView2.setScaleX((float) scale);
+            mFlDragView2.setTranslationY((float) (-dp2px(getContext(), 15) * percent));
+            mFlDragView3.setScaleY((float) scale2);
+            mFlDragView3.setScaleX((float) scale2);
+            mFlDragView3.setTranslationY((float) (-dp2px(getContext(), 15) * percent));
+            isDrop = false;
+            return true;
+        } else if (motionEvent.getAction() == MotionEvent.ACTION_UP) {
+            if (isDrop) {
+                return true;
+            }
+            mFlDragView.setVisibility(View.VISIBLE);
+            mFlDragView.setAlpha(1.0f);
+            final float dxEnd = motionEvent.getRawX() - mStartX;
+            final float dyEnd = motionEvent.getRawY() - mStartY;
+            double distanceEnd = Math.sqrt(dxEnd * dxEnd + dyEnd * dyEnd);
+            if (distanceEnd < 350) {
+                // 动画回去
+                {
+                    ObjectAnimator.ofFloat(mFlDragView, TRANSLATION_X, dxEnd, 0).setDuration(DURATION).start();
+                    ObjectAnimator.ofFloat(mFlDragView, TRANSLATION_Y, dyEnd, 0).setDuration(DURATION).start();
                 }
-                // Dropped, reassign View to ViewGroup
-                View view = (View) event.getLocalState();
-//                ViewGroup owner = (ViewGroup) view.getParent();
-//                owner.removeView(view);
-//                LinearLayout container = (LinearLayout) v;
-//                container.addView(view);
-                view.setVisibility(View.VISIBLE);
-                mFlDragView.setVisibility(View.VISIBLE);
-                mFlDragView.setAlpha(1.0f);
-                final float dxEnd = event.getX() - mStartX;
-                final float dyEnd = event.getY() - mStartY;
-                double distanceEnd = Math.sqrt(dxEnd * dxEnd + dyEnd * dyEnd);
-                if (distanceEnd < 350) {
-                    // 动画回去
-                    {
-                        ObjectAnimator.ofFloat(mFlDragView, TRANSLATION_X, dxEnd, 0).setDuration(DURATION).start();
-                        ObjectAnimator.ofFloat(mFlDragView, TRANSLATION_Y, dyEnd, 0).setDuration(DURATION).start();
-                    }
-                    {
-                        ObjectAnimator.ofFloat(mFlDragView2, View.SCALE_X, mFlDragView2.getScaleX(), 0.95f).setDuration(DURATION).start();
-                        ObjectAnimator.ofFloat(mFlDragView2, View.SCALE_Y, mFlDragView2.getScaleY(), 0.95f).setDuration(DURATION).start();
-                        ObjectAnimator.ofFloat(mFlDragView2, View.TRANSLATION_Y, mFlDragView2.getTranslationY(), 0f).setDuration(DURATION).start();
-                    }
-                    {
-                        ObjectAnimator.ofFloat(mFlDragView3, View.SCALE_X, mFlDragView3.getScaleX(), 0.9f).setDuration(DURATION).start();
-                        ObjectAnimator.ofFloat(mFlDragView3, View.SCALE_Y, mFlDragView3.getScaleY(), 0.9f).setDuration(DURATION).start();
-                        ObjectAnimator.ofFloat(mFlDragView3, View.TRANSLATION_Y, mFlDragView3.getTranslationY(), 0f).setDuration(DURATION).start();
-                    }
+                {
+                    ObjectAnimator.ofFloat(mFlDragView2, View.SCALE_X, mFlDragView2.getScaleX(), 0.95f).setDuration(DURATION).start();
+                    ObjectAnimator.ofFloat(mFlDragView2, View.SCALE_Y, mFlDragView2.getScaleY(), 0.95f).setDuration(DURATION).start();
+                    ObjectAnimator.ofFloat(mFlDragView2, View.TRANSLATION_Y, mFlDragView2.getTranslationY(), 0f).setDuration(DURATION).start();
+                }
+                {
+                    ObjectAnimator.ofFloat(mFlDragView3, View.SCALE_X, mFlDragView3.getScaleX(), 0.9f).setDuration(DURATION).start();
+                    ObjectAnimator.ofFloat(mFlDragView3, View.SCALE_Y, mFlDragView3.getScaleY(), 0.9f).setDuration(DURATION).start();
+                    ObjectAnimator.ofFloat(mFlDragView3, View.TRANSLATION_Y, mFlDragView3.getTranslationY(), 0f).setDuration(DURATION).start();
+                }
+            } else {
+                mFlDragView.setTranslationY(dyEnd);
+                // 动画出去
+                ObjectAnimator animator;
+                if (dxEnd < 0) {
+                    animator = ObjectAnimator
+                            .ofFloat(mFlDragView, TRANSLATION_X, dxEnd, -mFlDragView.getRight())
+                            .setDuration(DURATION);
+                    animator
+                            .addListener(new Animator.AnimatorListener() {
+                                @Override
+                                public void onAnimationStart(Animator animation) {
+
+                                }
+
+                                @Override
+                                public void onAnimationEnd(Animator animation) {
+                                    changeView();
+                                    resetView();
+                                }
+
+                                @Override
+                                public void onAnimationCancel(Animator animation) {
+
+                                }
+
+                                @Override
+                                public void onAnimationRepeat(Animator animation) {
+
+                                }
+                            });
                 } else {
-                    mFlDragView.setTranslationY(dyEnd);
-                    // 动画出去
-                    ObjectAnimator animator;
-                    if (dxEnd < 0) {
-                        animator = ObjectAnimator
-                                .ofFloat(mFlDragView, TRANSLATION_X, dxEnd, -mFlDragView.getRight())
-                                .setDuration(DURATION);
-                        animator
-                                .addListener(new Animator.AnimatorListener() {
-                                    @Override
-                                    public void onAnimationStart(Animator animation) {
+                    animator = ObjectAnimator
+                            .ofFloat(mFlDragView, TRANSLATION_X, dxEnd, mScreenWidth - mFlDragView.getLeft())
+                            .setDuration(DURATION);
+                    animator.addListener(new Animator.AnimatorListener() {
+                        @Override
+                        public void onAnimationStart(Animator animation) {
 
-                                    }
+                        }
 
-                                    @Override
-                                    public void onAnimationEnd(Animator animation) {
-                                        changeView();
-                                        resetView();
-                                    }
+                        @Override
+                        public void onAnimationEnd(Animator animation) {
+                            resetView();
+                            changeView();
+                        }
 
-                                    @Override
-                                    public void onAnimationCancel(Animator animation) {
+                        @Override
+                        public void onAnimationCancel(Animator animation) {
 
-                                    }
+                        }
 
-                                    @Override
-                                    public void onAnimationRepeat(Animator animation) {
+                        @Override
+                        public void onAnimationRepeat(Animator animation) {
 
-                                    }
-                                });
-                    } else {
-                        animator = ObjectAnimator
-                                .ofFloat(mFlDragView, TRANSLATION_X, dxEnd, mScreenWidth - mFlDragView.getLeft())
-                                .setDuration(DURATION);
-                        animator.addListener(new Animator.AnimatorListener() {
-                            @Override
-                            public void onAnimationStart(Animator animation) {
-
-                            }
-
-                            @Override
-                            public void onAnimationEnd(Animator animation) {
-                                resetView();
-                                changeView();
-                            }
-
-                            @Override
-                            public void onAnimationCancel(Animator animation) {
-
-                            }
-
-                            @Override
-                            public void onAnimationRepeat(Animator animation) {
-
-                            }
-                        });
-                    }
-                    animator.start();
+                        }
+                    });
                 }
-                mStartX = 0;
-                mStartY = 0;
-                isDrop = true;
-                break;
-            default:
-                break;
+                animator.start();
+            }
+            mStartX = 0;
+            mStartY = 0;
+            isDrop = true;
+            return true;
         }
-        return true;
+        return false;
     }
 
     private void changeView() {
@@ -256,8 +235,10 @@ public class DragPagerView extends FrameLayout implements View.OnTouchListener, 
     private void resetView() {
         mFlDragView.setTranslationX(0f);
         mFlDragView.setTranslationY(0f);
+        mFlDragView.setRotation(0f);
         mFlDragView.setScaleX(1.0f);
         mFlDragView.setScaleY(1.0f);
+        mFlDragView.setAlpha(1.0f);
         mFlDragView2.setTranslationX(0f);
         mFlDragView2.setTranslationY(0f);
         mFlDragView2.setScaleX(0.95f);
@@ -320,6 +301,11 @@ public class DragPagerView extends FrameLayout implements View.OnTouchListener, 
                 View newView = mQueeAdapter.getNewView();
                 if (newView != null) {
                     mFlDragView3.addView(newView, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+                    mFlDragView3.setVisibility(View.VISIBLE);
+                    mFlDragView4.setVisibility(View.VISIBLE);
+                } else {
+                    mFlDragView3.setVisibility(GONE);
+                    mFlDragView4.setVisibility(GONE);
                 }
             }
         }
@@ -361,5 +347,43 @@ public class DragPagerView extends FrameLayout implements View.OnTouchListener, 
                 Log.e(View.VIEW_LOG_TAG, "Asked for drag thumb metrics but no view");
             }
         }
+    }
+
+    public void turnPageLeft() {
+        {
+            ObjectAnimator.ofFloat(mFlDragView2, View.SCALE_X, mFlDragView2.getScaleX(), 1f).setDuration(DURATION).start();
+            ObjectAnimator.ofFloat(mFlDragView2, View.SCALE_Y, mFlDragView2.getScaleY(), 1f).setDuration(DURATION).start();
+            ObjectAnimator.ofFloat(mFlDragView2, View.TRANSLATION_Y, mFlDragView2.getTranslationY(), (float) (-dp2px(getContext(), 15))).setDuration(500).start();
+        }
+        {
+            ObjectAnimator.ofFloat(mFlDragView3, View.SCALE_X, mFlDragView3.getScaleX(), 0.95f).setDuration(DURATION).start();
+            ObjectAnimator.ofFloat(mFlDragView3, View.SCALE_Y, mFlDragView3.getScaleY(), 0.95f).setDuration(DURATION).start();
+            ObjectAnimator.ofFloat(mFlDragView3, View.TRANSLATION_Y, mFlDragView3.getTranslationY(), (float) (-dp2px(getContext(), 15))).setDuration(500).start();
+        }
+        YoYo.with(Techniques.RotateOutUpLeft)
+                .interpolate(new AccelerateInterpolator())
+                .duration(500)
+                .withListener(new com.nineoldandroids.animation.Animator.AnimatorListener() {
+                    @Override
+                    public void onAnimationStart(com.nineoldandroids.animation.Animator animation) {
+
+                    }
+
+                    @Override
+                    public void onAnimationEnd(com.nineoldandroids.animation.Animator animation) {
+                        resetView();
+                        changeView();
+                    }
+
+                    @Override
+                    public void onAnimationCancel(com.nineoldandroids.animation.Animator animation) {
+
+                    }
+
+                    @Override
+                    public void onAnimationRepeat(com.nineoldandroids.animation.Animator animation) {
+
+                    }
+                }).playOn(mFlDragView);
     }
 }
